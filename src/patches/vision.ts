@@ -22,6 +22,10 @@ function isVisionAffected(token: TokenInstance, changed: Record<string, unknown>
   return positionChanged || elevationChanged || sizeChanged || rotationChanged;
 }
 
+function getClientStorage(): Storage {
+  return (game.settings!.storage as unknown as Map<string, Storage>).get('client')!;
+}
+
 export function patchMovementVision(): void {
   const proto = foundry.canvas.placeables.Token.prototype as unknown as TokenProtoPatchable;
 
@@ -56,20 +60,20 @@ export function patchMovementVision(): void {
       return;
     }
 
-    const visionAnimation = game.settings!.get('core', 'visionAnimation') as boolean;
-
-    if (visionAnimation) {
-      game.settings!.set('core', 'visionAnimation', false);
-    }
+    const clientStorage = getClientStorage();
+    const stored = clientStorage.getItem('core.visionAnimation');
+    clientStorage.setItem('core.visionAnimation', 'false');
 
     originalOnAnimationUpdate.call(this as unknown as TokenProtoPatchable, changed, context);
 
-    if (visionAnimation) {
-      game.settings!.set('core', 'visionAnimation', true);
+    if (stored !== null) {
+      clientStorage.setItem('core.visionAnimation', stored);
+    } else {
+      clientStorage.removeItem('core.visionAnimation');
+    }
+
+    if (context.time >= context.duration) {
+      suppressedTokens.delete(this.document.id!);
     }
   };
-
-  Hooks.on('updateToken', (document: TokenDocument) => {
-    suppressedTokens.delete(document.id!);
-  });
 }
