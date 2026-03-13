@@ -30,6 +30,9 @@ export function patchMovementVision(): void {
     options: Record<string, unknown>,
     userId: string,
   ): void {
+    // Clean up from previous movement
+    suppressedTokens.delete(this.document.id!);
+
     const suppress = game.settings!.get(MODULE_ID, 'suppressMovementVision') as boolean;
     const mover = game.users!.get(userId);
 
@@ -105,12 +108,11 @@ export function patchMovementVision(): void {
       clientStorage.removeItem('core.visionAnimation');
     }
 
-    // On the final frame, initialize sources ourselves since Foundry's
-    // post-animation fallback only triggers if visionAnimation was false
-    // at the start of _onUpdate, not temporarily during animation frames.
+    // On the final frame of each sub-animation, call initializeSources.
+    // Don't remove from suppressedTokens here — multiple concurrent animations
+    // exist for the same token, and clearing early would unsuppress the others.
     if (context.time >= context.duration) {
       console.log(`[${MODULE_ID}] Animation complete, calling initializeSources`);
-      suppressedTokens.delete(this.document.id!);
       (this as unknown as TokenProtoPatchable).initializeSources();
     }
   };
