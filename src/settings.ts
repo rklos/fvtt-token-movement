@@ -22,7 +22,7 @@ export function registerSettings(): void {
     scope: 'world',
     config: true,
     type: Number,
-    default: 100,
+    default: 300,
     range: {
       min: 1,
       max: 2000,
