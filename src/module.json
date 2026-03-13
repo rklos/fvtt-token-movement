@@ -1,0 +1,33 @@
+{
+  "id": "token-movement",
+  "title": "Token Movement",
+  "description": "Token movement tracking and utilities for Foundry VTT.",
+  "version": "0.1.0",
+  "authors": [
+    {
+      "name": "Radoslaw Klos",
+      "email": "radoslaw@klos.dev"
+    }
+  ],
+  "compatibility": {
+    "minimum": "13",
+    "verified": "13"
+  },
+  "esmodules": [
+    "token-movement.js"
+  ],
+  "languages": [
+    {
+      "lang": "en",
+      "name": "English",
+      "path": "lang/en.json"
+    },
+    {
+      "lang": "pl",
+      "name": "Polski",
+      "path": "lang/pl.json"
+    }
+  ],
+  "license": "MIT",
+  "url": "https://github.com/rklos/fvtt-token-movement"
+}
