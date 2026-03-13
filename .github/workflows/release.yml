@@ -91,12 +91,11 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           artifacts: "./dist/module.json, ./dist/${{steps.moduleID.outputs.prop}}.zip"
 
-      # TODO: Uncomment when module is registered in Foundry VTT repository
-      # - name: Publish to Foundry Repository
-      #   uses: fjogeleit/http-request-action@v1
-      #   with:
-      #     url: 'https://api.foundryvtt.com/_api/packages/release_version'
-      #     method: 'POST'
-      #     customHeaders: '{"Content-Type": "application/json", "Authorization" : "${{ secrets.FOUNDRY_KEY }}"}'
-      #     data: '{"dry_run": false, "id": "${{steps.moduleID.outputs.prop}}", "release": {"version":  "${{steps.tag.outputs.tag}}", "manifest": "https://github.com/${{github.repository}}/releases/download/${{steps.tag.outputs.tag}}/module.json", "notes": "https://github.com/${{github.repository}}/releases/tag/${{steps.tag.outputs.tag}}", "compatibility" : {"minimum": "${{steps.minimum.outputs.prop}}", "verified": "${{steps.verified.outputs.prop}}"}}}'
-      #     timeout: 20000
+      - name: Publish to Foundry Repository
+        uses: fjogeleit/http-request-action@v1
+        with:
+          url: 'https://api.foundryvtt.com/_api/packages/release_version'
+          method: 'POST'
+          customHeaders: '{"Content-Type": "application/json", "Authorization" : "${{ secrets.FOUNDRY_KEY }}"}'
+          data: '{"dry_run": false, "id": "${{steps.moduleID.outputs.prop}}", "release": {"version":  "${{steps.tag.outputs.tag}}", "manifest": "https://github.com/${{github.repository}}/releases/download/${{steps.tag.outputs.tag}}/module.json", "notes": "https://github.com/${{github.repository}}/releases/tag/${{steps.tag.outputs.tag}}", "compatibility" : {"minimum": "${{steps.minimum.outputs.prop}}", "verified": "${{steps.verified.outputs.prop}}"}}}'
+          timeout: 20000
