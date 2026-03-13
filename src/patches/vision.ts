@@ -19,8 +19,6 @@ function getClientStorage(): Storage {
 export function patchMovementVision(): void {
   const tokenClass = CONFIG.Token.objectClass as unknown as { prototype: TokenProtoPatchable };
 
-  console.log(`[${MODULE_ID}] Patching vision on`, tokenClass);
-
   // eslint-disable-next-line @typescript-eslint/unbound-method -- intentionally capturing for prototype patching
   const originalOnUpdate = tokenClass.prototype._onUpdate;
 
@@ -30,22 +28,10 @@ export function patchMovementVision(): void {
     options: Record<string, unknown>,
     userId: string,
   ): void {
-    // Clean up from previous movement
     suppressedTokens.delete(this.document.id!);
 
     const suppress = game.settings!.get(MODULE_ID, 'suppressMovementVision') as boolean;
     const mover = game.users!.get(userId);
-
-    console.log(`[${MODULE_ID}] _onUpdate`, {
-      tokenId: this.document.id,
-      tokenName: this.document.name,
-      suppress,
-      moverIsGM: mover?.isGM,
-      userId,
-      changedKeys: Object.keys(changed),
-      hasSight: this.hasSight,
-      isLightSource: (this as unknown as TokenProtoPatchable)._isLightSource(),
-    });
 
     if (suppress && mover?.isGM) {
       const positionChanged = 'x' in changed || 'y' in changed;
@@ -56,14 +42,6 @@ export function patchMovementVision(): void {
       const visionChanged = perspectiveChanged && this.hasSight;
       const lightChanged = perspectiveChanged
         && (this as unknown as TokenProtoPatchable)._isLightSource();
-
-      console.log(`[${MODULE_ID}] Vision check`, {
-        positionChanged,
-        perspectiveChanged,
-        visionChanged,
-        lightChanged,
-        willSuppress: visionChanged || lightChanged,
-      });
 
       if (visionChanged || lightChanged) {
         suppressedTokens.add(this.document.id!);
@@ -81,9 +59,7 @@ export function patchMovementVision(): void {
     changed: Token.PartialAnimationData,
     context: Token.AnimationContext,
   ): void {
-    const isSuppressed = suppressedTokens.has(this.document.id!);
-
-    if (!isSuppressed) {
+    if (!suppressedTokens.has(this.document.id!)) {
       originalOnAnimationUpdate.call(this as unknown as TokenProtoPatchable, changed, context);
       return;
     }
@@ -91,14 +67,6 @@ export function patchMovementVision(): void {
     const clientStorage = getClientStorage();
     const stored = clientStorage.getItem('core.visionAnimation');
     clientStorage.setItem('core.visionAnimation', 'false');
-
-    const settingBefore = game.settings!.get('core', 'visionAnimation');
-    console.log(`[${MODULE_ID}] _onAnimationUpdate SUPPRESSING`, {
-      tokenId: this.document.id,
-      frame: `${context.time}/${context.duration}`,
-      storedValue: stored,
-      settingAfterOverride: settingBefore,
-    });
 
     originalOnAnimationUpdate.call(this as unknown as TokenProtoPatchable, changed, context);
 
@@ -112,7 +80,6 @@ export function patchMovementVision(): void {
     // Don't remove from suppressedTokens here — multiple concurrent animations
     // exist for the same token, and clearing early would unsuppress the others.
     if (context.time >= context.duration) {
-      console.log(`[${MODULE_ID}] Animation complete, calling initializeSources`);
       (this as unknown as TokenProtoPatchable).initializeSources();
     }
   };
