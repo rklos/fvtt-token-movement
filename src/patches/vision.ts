@@ -4,35 +4,25 @@ type TokenInstance = InstanceType<typeof foundry.canvas.placeables.Token>;
 
 interface TokenProtoPatchable {
   _isVisionSource(): boolean;
+  _isLightSource(): boolean;
   _onUpdate(changed: Record<string, unknown>, options: Record<string, unknown>, userId: string): void;
   _onAnimationUpdate(changed: Token.PartialAnimationData, context: Token.AnimationContext): void;
+  initializeSources(): void;
 }
 
 const suppressedTokens = new Set<string>();
-
-function isVisionAffected(token: TokenInstance, changed: Record<string, unknown>): boolean {
-  const proto = token as unknown as TokenProtoPatchable;
-  if (!proto._isVisionSource()) return false;
-
-  const positionChanged = 'x' in changed || 'y' in changed;
-  const elevationChanged = 'elevation' in changed;
-  const sizeChanged = 'width' in changed || 'height' in changed;
-  const rotationChanged = 'rotation' in changed && token.hasLimitedSourceAngle;
-
-  return positionChanged || elevationChanged || sizeChanged || rotationChanged;
-}
 
 function getClientStorage(): Storage {
   return (game.settings!.storage as unknown as Map<string, Storage>).get('client')!;
 }
 
 export function patchMovementVision(): void {
-  const proto = foundry.canvas.placeables.Token.prototype as unknown as TokenProtoPatchable;
+  const tokenClass = CONFIG.Token.objectClass as unknown as { prototype: TokenProtoPatchable };
 
   // eslint-disable-next-line @typescript-eslint/unbound-method -- intentionally capturing for prototype patching
-  const originalOnUpdate = proto._onUpdate;
+  const originalOnUpdate = tokenClass.prototype._onUpdate;
 
-  proto._onUpdate = function _onUpdate(
+  tokenClass.prototype._onUpdate = function _onUpdate(
     this: TokenInstance,
     changed: Record<string, unknown>,
     options: Record<string, unknown>,
@@ -40,17 +30,29 @@ export function patchMovementVision(): void {
   ): void {
     const suppress = game.settings!.get(MODULE_ID, 'suppressMovementVision') as boolean;
 
-    if (suppress && game.user!.id === userId && isVisionAffected(this, changed)) {
-      suppressedTokens.add(this.document.id!);
+    const mover = game.users!.get(userId);
+    if (suppress && mover?.isGM) {
+      const positionChanged = 'x' in changed || 'y' in changed;
+      const elevationChanged = 'elevation' in changed;
+      const sizeChanged = 'width' in changed || 'height' in changed;
+      const rotationChanged = 'rotation' in changed && this.hasLimitedSourceAngle;
+      const perspectiveChanged = positionChanged || elevationChanged || sizeChanged || rotationChanged;
+      const visionChanged = perspectiveChanged && this.hasSight;
+      const lightChanged = perspectiveChanged
+        && (this as unknown as TokenProtoPatchable)._isLightSource();
+
+      if (visionChanged || lightChanged) {
+        suppressedTokens.add(this.document.id!);
+      }
     }
 
     return originalOnUpdate.call(this as unknown as TokenProtoPatchable, changed, options, userId);
   };
 
   // eslint-disable-next-line @typescript-eslint/unbound-method -- intentionally capturing for prototype patching
-  const originalOnAnimationUpdate = proto._onAnimationUpdate;
+  const originalOnAnimationUpdate = tokenClass.prototype._onAnimationUpdate;
 
-  proto._onAnimationUpdate = function _onAnimationUpdate(
+  tokenClass.prototype._onAnimationUpdate = function _onAnimationUpdate(
     this: TokenInstance,
     changed: Token.PartialAnimationData,
     context: Token.AnimationContext,
@@ -72,8 +74,12 @@ export function patchMovementVision(): void {
       clientStorage.removeItem('core.visionAnimation');
     }
 
+    // On the final frame, initialize sources ourselves since Foundry's
+    // post-animation fallback only triggers if visionAnimation was false
+    // at the start of _onUpdate, not temporarily during animation frames.
     if (context.time >= context.duration) {
       suppressedTokens.delete(this.document.id!);
+      (this as unknown as TokenProtoPatchable).initializeSources();
     }
   };
 }
