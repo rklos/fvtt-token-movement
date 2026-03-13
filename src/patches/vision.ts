@@ -3,6 +3,7 @@ import { MODULE_ID } from '~/constants';
 type TokenInstance = InstanceType<typeof foundry.canvas.placeables.Token>;
 
 interface TokenProtoPatchable {
+  _isVisionSource(): boolean;
   _onUpdate(changed: Record<string, unknown>, options: Record<string, unknown>, userId: string): void;
   _onAnimationUpdate(changed: Token.PartialAnimationData, context: Token.AnimationContext): void;
 }
@@ -10,12 +11,15 @@ interface TokenProtoPatchable {
 const suppressedTokens = new Set<string>();
 
 function isVisionAffected(token: TokenInstance, changed: Record<string, unknown>): boolean {
-  if (!token.document.sight.enabled) return false;
-  return 'x' in changed || 'y' in changed || 'elevation' in changed;
-}
+  const proto = token as unknown as TokenProtoPatchable;
+  if (!proto._isVisionSource()) return false;
 
-function getClientStorage(): Storage {
-  return (game.settings!.storage as unknown as Map<string, Storage>).get('client')!;
+  const positionChanged = 'x' in changed || 'y' in changed;
+  const elevationChanged = 'elevation' in changed;
+  const sizeChanged = 'width' in changed || 'height' in changed;
+  const rotationChanged = 'rotation' in changed && token.hasLimitedSourceAngle;
+
+  return positionChanged || elevationChanged || sizeChanged || rotationChanged;
 }
 
 export function patchMovementVision(): void {
@@ -32,7 +36,7 @@ export function patchMovementVision(): void {
   ): void {
     const suppress = game.settings!.get(MODULE_ID, 'suppressMovementVision') as boolean;
 
-    if (suppress && isVisionAffected(this, changed)) {
+    if (suppress && game.user!.id === userId && isVisionAffected(this, changed)) {
       suppressedTokens.add(this.document.id!);
     }
 
@@ -52,16 +56,16 @@ export function patchMovementVision(): void {
       return;
     }
 
-    const clientStorage = getClientStorage();
-    const stored = clientStorage.getItem('core.visionAnimation');
-    clientStorage.setItem('core.visionAnimation', 'false');
+    const visionAnimation = game.settings!.get('core', 'visionAnimation') as boolean;
+
+    if (visionAnimation) {
+      game.settings!.set('core', 'visionAnimation', false);
+    }
 
     originalOnAnimationUpdate.call(this as unknown as TokenProtoPatchable, changed, context);
 
-    if (stored !== null) {
-      clientStorage.setItem('core.visionAnimation', stored);
-    } else {
-      clientStorage.removeItem('core.visionAnimation');
+    if (visionAnimation) {
+      game.settings!.set('core', 'visionAnimation', true);
     }
   };
 
