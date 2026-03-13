@@ -24,11 +24,6 @@ export function patchAnimationSpeed(): void {
 
     const animationOptions = options as { animation: TokenAnimationBag };
 
-    if (mode === 'disabled') {
-      animationOptions.animation = { duration: 1 };
-      return;
-    }
-
     const speedValue = game.settings!.get(MODULE_ID, 'speedValue');
     const { defaultSpeed } = CONFIG.Token.movement;
     const hasPositionChange = 'x' in change || 'y' in change;
@@ -36,11 +31,12 @@ export function patchAnimationSpeed(): void {
 
     let movementSpeed: number;
 
-    if (mode === 'fixed') {
+    if (mode === 'disabled' || mode === 'fixed') {
+      const duration = mode === 'disabled' ? 1 : speedValue;
       // Convert fixed total duration (ms) to movementSpeed (grid spaces/sec)
       // speed = distance / (duration / 1000)
       const effectiveDistance = Math.max(distance, 1);
-      movementSpeed = (effectiveDistance * 1000) / speedValue;
+      movementSpeed = (effectiveDistance * 1000) / duration;
     } else {
       movementSpeed = defaultSpeed * (speedValue / 100);
     }
