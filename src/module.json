@@ -2,7 +2,7 @@
   "id": "token-movement",
   "title": "Token Movement",
   "description": "Token movement tracking and utilities for Foundry VTT.",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "authors": [
     {
       "name": "Radoslaw Klos",
