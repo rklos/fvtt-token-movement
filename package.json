@@ -1,21 +1,22 @@
 {
-  "name": "fvtt-token-movement",
+  "name": "token-movement",
   "version": "0.1.7",
   "type": "module",
   "scripts": {
     "build": "tsc --noEmit && vite build",
-    "bump-version": "tsx tools/bump-version.ts"
+    "bump-version": "tsx tools/bump-version.ts",
+    "scaffold": "npx yo fvtt:module"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/rklos/fvtt-token-movement.git"
+    "url": "git+https://github.com/rklos/token-movement.git"
   },
   "author": "Radoslaw Klos <radoslaw@klos.dev>",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/rklos/fvtt-token-movement/issues"
+    "url": "https://github.com/rklos/token-movement/issues"
   },
-  "homepage": "https://github.com/rklos/fvtt-token-movement#readme",
+  "homepage": "https://github.com/rklos/token-movement#readme",
   "devDependencies": {
     "@rklos/eslint-configs": "github:rklos/eslint-configs#3.1.5",
     "eslint": "10.0.3",
@@ -26,6 +27,8 @@
     "tsx": "4.21.0",
     "typescript": "5.9.3",
     "typescript-eslint": "8.57.0",
-    "vite": "8.0.0"
+    "vite": "8.0.0",
+    "generator-fvtt": "github:rklos/fvtt-generator",
+    "yo": "7.0.0"
   }
 }

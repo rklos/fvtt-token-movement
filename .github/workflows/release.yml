@@ -89,6 +89,11 @@ jobs:
           allowUpdates: true
           omitBodyDuringUpdate: true
           token: ${{ secrets.GITHUB_TOKEN }}
+          name: ${{ github.event.release.name }}
+          draft: ${{ github.event.release.unpublished }}
+          prerelease: ${{ github.event.release.prerelease }}
+          tag: ${{ github.event.release.tag_name }}
+          body: ${{ github.event.release.body }}
           artifacts: "./dist/module.json, ./dist/${{steps.moduleID.outputs.prop}}.zip"
 
       - name: Publish to Foundry Repository

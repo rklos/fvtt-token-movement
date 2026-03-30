@@ -1,0 +1,17 @@
+{
+  "generator-fvtt": {
+    "type": "module",
+    "id": "token-movement",
+    "title": "Token Movement",
+    "description": "Token movement tracking and utilities for Foundry VTT.",
+    "author": "Radoslaw Klos",
+    "email": "radoslaw@klos.dev",
+    "license": "MIT",
+    "outputFilename": "token-movement",
+    "languageCodes": [
+      "en",
+      "pl"
+    ],
+    "optionalDeps": ""
+  }
+}
