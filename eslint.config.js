@@ -4,16 +4,16 @@ export default [
   ...ts,
   {
     rules: {
-      // fvtt-types requires `any` casts for game.settings, etc.
+      // fvtt-types requires `any` casts for game.settings, Roll prototype, etc.
       '@typescript-eslint/no-unsafe-assignment': 'off',
       '@typescript-eslint/no-unsafe-call': 'off',
       '@typescript-eslint/no-unsafe-member-access': 'off',
       '@typescript-eslint/no-unsafe-return': 'off',
       '@typescript-eslint/no-unsafe-argument': 'off',
       '@typescript-eslint/no-explicit-any': 'off',
-      // Foundry VTT uses underscored internals
+      // Foundry VTT uses underscored internals (_total, _evaluateTotal, _updateObject)
       'no-underscore-dangle': 'off',
-      // Allow property mutation on function parameters
+      // Allow property mutation on function parameters (DOM elements, Roll objects)
       'no-param-reassign': [ 'error', { props: false } ],
     },
   },

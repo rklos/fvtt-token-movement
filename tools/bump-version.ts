@@ -38,10 +38,10 @@ function bumpVersion(newVersionArg: string) {
   writeFileSync(packageLockPath, `${JSON.stringify(packageLock, null, 2)}\n`);
   console.log('Updated package-lock.json');
 
-  const moduleJsonPath = join(SRC_DIR, 'module.json');
-  const moduleJson = JSON.parse(readFileSync(moduleJsonPath, 'utf8'));
-  moduleJson.version = newVersion;
-  writeFileSync(moduleJsonPath, `${JSON.stringify(moduleJson, null, 2)}\n`);
+  const manifestJsonPath = join(SRC_DIR, 'module.json');
+  const manifestJson = JSON.parse(readFileSync(manifestJsonPath, 'utf8'));
+  manifestJson.version = newVersion;
+  writeFileSync(manifestJsonPath, `${JSON.stringify(manifestJson, null, 2)}\n`);
   console.log('Updated module.json');
 
   console.log(`\nVersion bumped: ${oldVersion} -> ${newVersion}`);
